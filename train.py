@@ -1,6 +1,7 @@
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "3"
-import json
+
+import numpy as np
 from math import ceil
 import keras
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
@@ -13,7 +14,7 @@ from utils.losses import bce_dice_loss, iou_metric
 from utils.cyclical_learning_rate import CyclicalLearningRateScheduler
 
 
-BATCH_SIZE = 12
+BATCH_SIZE = 32
 LR = 1e-3
 EPOCHS = 200
 INPUT_SHAPE = (224, 224, 3)
@@ -40,14 +41,9 @@ if __name__ == '__main__':
                 compile=False)
 
     # Freeze encoder layers which are pretrained
-    if args.freeze_encoder:
-        for layer in mobilenet.model.layers:
-            if layer.name.startswith('enc'):
-                layer.trainable = False
-    else:
-        for layer in mobilenet.model.layers:
-            layer.trainable = True
-    print(mobilenet.model.summary())
+    for layer in mobilenet.model.layers:
+        layer.trainable = True
+    # print(mobilenet.model.summary())
 
     # Define optimizer and compile pre_models
     opt = keras.optimizers.Adam(lr=args.lr)
@@ -117,3 +113,13 @@ if __name__ == '__main__':
         callbacks=callbacks,
         validation_data=val_generator,
         validation_steps=ceil(len(val_generator) / BATCH_SIZE))
+
+    # import matplotlib.pyplot as plt
+    # plt.plot(cyclic_learning_rate.learning_rates)
+    # plt.xlabel('Step', fontsize=20)
+    # plt.ylabel('lr', fontsize=20)
+    # plt.axis([0, args.final_epoch, 0, LR * 1.1])
+    # plt.xticks(np.arange(0, args.final_epoch, 1))
+    # plt.grid()
+    # plt.title('cyclical', fontsize=20)
+    # plt.savefig('./cyclical.png')

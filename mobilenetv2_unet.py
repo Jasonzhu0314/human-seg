@@ -1,8 +1,3 @@
-
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-
 import os
 import warnings
 import h5py
@@ -188,15 +183,15 @@ class MobilenetV2_Unet(object):
         def upconv(input_tensor, filters, stride, block_id, concat_tensor=None, dilation=1):
             tensor = input_tensor
             if concat_tensor is not None:
-                print(f'Block: {block_id}')
-                print(input_tensor.shape, concat_tensor.shape)
+                # print(f'Block: {block_id}')
+                # print(input_tensor.shape, concat_tensor.shape)
                 tensor = UpSampling2D(size=(2, 2),
                                       data_format=K.image_data_format(),
                                       interpolation='bilinear', name=f'upsampling_{block_id}')(tensor)
 
                 # Ugly solution for input shape=(401,401,3)
-                if block_id > 25:
-                    tensor = Lambda(lambda x: x[:, :-1, :-1, :])(tensor)
+                # if block_id > 25:
+                #    tensor = Lambda(lambda x: x[:, :-1, :-1, :])(tensor)
 
                 tensor = Concatenate(name=f'concat_{block_id}')([tensor, concat_tensor])
             self.dec_conv = _inverted_res_block(tensor, filters=filters, alpha=alpha, stride=stride, dilation=dilation,
