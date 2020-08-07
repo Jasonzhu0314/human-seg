@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 import numpy as np
 from math import ceil
@@ -14,7 +14,7 @@ from utils.losses import bce_dice_loss, iou_metric
 from utils.cyclical_learning_rate import CyclicalLearningRateScheduler
 
 
-BATCH_SIZE = 32
+BATCH_SIZE = 10
 LR = 1e-3
 EPOCHS = 200
 INPUT_SHAPE = (224, 224, 3)
