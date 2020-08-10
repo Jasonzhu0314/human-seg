@@ -23,7 +23,8 @@ class DataGenerator(Sequence):
     """
     def __init__(self, df, lf, id_file,
                  batch_size=8, resize=(224, 224),
-                 n_channels=3, shuffle=True, augmentations=True):
+                 n_channels=3, shuffle=True, augmentations=True,
+                 cla_num=2):
         """ 初始化方法
         :param df: 存放数据路径
         :param df: 存放标签的路径
@@ -45,6 +46,7 @@ class DataGenerator(Sequence):
         self.augmentations = augmentations
         self.read_ids()
         self.on_epoch_end()
+        self.cla_num = cla_num
 
     def __getitem__(self, index):
         """生成每一批次训练数据
@@ -66,12 +68,16 @@ class DataGenerator(Sequence):
             mask = cv2.imread(parsing_path, cv2.IMREAD_GRAYSCALE)
             # Make binary mask
             # mask = mask.astype(np.uint8)
+
             mask = np.where(mask >= 1., 1., 0.)
+            mask_label = np.zeros(mask.shape + (self.cla_num,))
+            for i in range(self.cla_num):
+                mask_label[mask == i, i] = 1
 
             # Resize image and mask
             if self.resize:
                 image = skt.resize(image, self.resize, anti_aliasing=False)
-                mask = np.round(skt.resize(mask, self.resize, anti_aliasing=False))
+                mask_label = np.round(skt.resize(mask_label, self.resize, anti_aliasing=False))
 
             # Augmentations
             if self.augmentations:
@@ -86,14 +92,14 @@ class DataGenerator(Sequence):
                     #     RandomGamma(p=0.9)
                     # ], p=0.5)
                 ], p=1)
-                augmented = aug(image=image, mask=mask)
+                augmented = aug(image=image, mask=mask_label)
                 image = augmented['image']
-                mask = augmented['mask']
+                mask_label = augmented['mask']
 
             images.append(image)
-            masks.append(mask)
+            masks.append(mask_label)
 
-        return np.asanyarray(images), np.expand_dims(masks, axis=-1)
+        return np.asanyarray(images), np.asarray(masks)
 
     def __len__(self):
         """每个epoch下的批次数量

@@ -26,6 +26,7 @@ import tensorflow as tf
 # BASE_WEIGHT_PATH = 'https://github.com/JonathanCMitchell/mobilenet_v2_keras/releases/download/v1.1/'
 BASE_WEIGHT_PATH = './pre_models/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.4_224_no_top.h5'
 
+
 def relu6(x):
     return K.relu(x, max_value=6)
 
@@ -47,10 +48,11 @@ def _make_divisible(v, divisor, min_value=None):
 
 
 class MobilenetV2_Unet(object):
-    def __init__(self):
+    def __init__(self, cla_num=2):
         self.model = None
+        self.cla_num = cla_num
 
-    def build_encoder(self, input_tensor_enc, output_stride=16, alpha=1.0, load_imagenet_weights=True):
+    def build_encoder(self, input_tensor_enc, output_stride=16, alpha=1.4, load_imagenet_weights=True):
         print('\nBuilding encoder...')
         print(f'Output stride: {output_stride}')
 
@@ -171,9 +173,10 @@ class MobilenetV2_Unet(object):
 
             # weigh_path = BASE_WEIGHT_PATH + model_name
             weigh_path = BASE_WEIGHT_PATH
-            weights_path = get_file(model_name, weigh_path,
-                                    cache_subdir='models')
-            print(f"Loading weights from {weights_path}")
+            # weights_path = get_file(model_name, weigh_path,
+            #                         cache_subdir='models')
+            print(f"Loading weights from {weigh_path}")
+            model.load_weights(weigh_path)
 
         return model
 
@@ -267,9 +270,9 @@ class MobilenetV2_Unet(object):
                                block_id=34)
         self.segmap = Conv2D(kernel_size=1,
                              strides=1,
-                             filters=1,
+                             filters=self.cla_num,
                              padding='same',
-                             activation='sigmoid',
+                             activation='softmax',
                              name='segmentation_map')(self.upconv17)
         print(self.input, self.segmap)
         model = Model(inputs=self.input, outputs=self.segmap, name='mobilenetv2_decoder')

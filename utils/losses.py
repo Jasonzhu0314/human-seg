@@ -3,7 +3,6 @@ import tensorflow as tf
 
 def bce_dice_loss(y_true, y_pred):
     """Calculates binary crossentropy dice loss.
-
     Calculates as [BCE - log(IoU)]
 
     y_true: tf.Tensor
@@ -16,11 +15,9 @@ def bce_dice_loss(y_true, y_pred):
 
     return K.mean(K.binary_crossentropy(y_true, y_pred)) - K.log(iou_metric(y_true, y_pred))
 
+
 def iou_metric(y_true, y_pred, smooth=1):
     """Calculates Intersection-over-Union metric across batch axis.
-
-    Paper: http://www.cs.umanitoba.ca/~ywang/papers/isvc16.pdf
-
     y_true: tf.Tensor
         Original labels (mask).
     y_pred: tf.Tensor
