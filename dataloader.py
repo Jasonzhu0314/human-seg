@@ -10,16 +10,17 @@ from albumentations import (
     ElasticTransform,
     GridDistortion,
     RandomSizedCrop,
-    OneOf,
-    RandomBrightnessContrast,
-    RandomGamma,
     ShiftScaleRotate,
 )
 
 
 class DataGenerator(Sequence):
     """
-    基于Sequence的自定义Keras数据生成器
+    基于Sequence的自定义Keras数据生成器,
+    1.Hat,2.Hair,3.Glove,4.Sunglasses,5.UpperClothes
+    6.Dress,7.Coat,8.Socks,9.Pants,10.Jumpsuits,11.Scarf
+    12.Skirt,13.Face,14.Left-arm,15.Right-arm,16.Left-leg
+    17.Right-leg,18.Left-shoe,19.Right-shoe
     """
     def __init__(self, df, lf, id_file,
                  batch_size=8, resize=(224, 224),
@@ -69,10 +70,20 @@ class DataGenerator(Sequence):
             # Make binary mask
             # mask = mask.astype(np.uint8)
 
-            mask = np.where(mask >= 1., 1., 0.)
+            # mask = np.where(mask >= 1., 1., 0.)
+            if self.cla_num == 2:
+                mask = np.where(mask >= 1., 1., 0.)
             mask_label = np.zeros(mask.shape + (self.cla_num,))
-            for i in range(self.cla_num):
-                mask_label[mask == i, i] = 1
+            if self.cla_num == 4:  # 1.Hat,2.Hair,13.Face
+                label_num = {1: 1, 2: 2, 13: 3}
+                for i in range(self.cla_num):
+                    if i in label_num.keys():
+                        mask_label[mask == i, label_num[i]] = 1
+                    else:
+                        mask_label[mask == i, 0] = 1
+            else:
+                for i in range(self.cla_num):
+                    mask_label[mask == i, i] = 1
 
             # Resize image and mask
             if self.resize:
@@ -109,7 +120,7 @@ class DataGenerator(Sequence):
     def on_epoch_end(self):
         """每个epoch之后更新索引
         """
-        if self.shuffle == True:
+        if self.shuffle:
             np.random.shuffle(self.indexes)
 
     def read_ids(self):

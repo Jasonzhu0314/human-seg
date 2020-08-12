@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 import numpy as np
 from math import ceil
@@ -17,7 +17,7 @@ from keras.utils import multi_gpu_model
 
 
 BATCH_SIZE = 10
-LR_MAX = 1e-2
+LR_MAX = 5e-3
 LR_MIN = 0.
 EPOCHS = 300
 N_CYCLE = 3
@@ -38,11 +38,12 @@ if __name__ == '__main__':
     mobilenet.build_model(keras.layers.Input(shape=INPUT_SHAPE), alpha=1.4)
     # multi_gpu_model(mobilenet, gpus=2)
     # # Load saved pre_models if specified
+    model_path = "./checkpoints/4/mobilenet-92_loss-0.3151_val_loss-0.2251.h5"
+    print(args.model)
     if args.model is not None:
         mobilenet.model = keras.models.load_model(
-                args.model,
-                custom_objects={'relu6': relu6,
-                                'bce_dice_loss': bce_dice_loss},
+                    model_path,
+                custom_objects={'relu6': relu6},
                 compile=False)
 
     # Freeze encoder layers which are pretrained
@@ -52,7 +53,7 @@ if __name__ == '__main__':
 
     # Define optimizer and compile pre_models
     # opt = keras.optimizers.Adam(lr=args.lr)
-    opt = keras.optimizers.SGD(lr=0.01, momentum=0.9, decay=0, nesterov=False)
+    opt = keras.optimizers.SGD(lr=LR_MAX, momentum=0.9, decay=0, nesterov=False)
     # mobilenet.model.compile(optimizer=opt, loss=bce_dice_loss, metrics=[iou_metric])
     mobilenet.model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
 
@@ -85,7 +86,7 @@ if __name__ == '__main__':
 
     # Define callbacks
     model_checkpoint = ModelCheckpoint(
-        filepath='./checkpoints/mobilenet-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
+        filepath='./checkpoints/'+str(cla_num)+'/mobilenet-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
         monitor='val_loss',
         verbose=1,
         save_best_only=True,
@@ -98,10 +99,10 @@ if __name__ == '__main__':
                                                total_epochs=EPOCHS,
                                                n_cycles=N_CYCLE,
                                                epoch_step_init=args.initial_epoch,
-                                               save_snapshot=True
-                                               )
+                                               save_snapshot=True,
+                                               cla_num=cla_num)
 
-    log_dir = "./log_dir/mobilev2_unet"
+    log_dir = "./log_dir/mobilev2_unet/{}".format(cla_num)
     tensorboard = TensorBoard(log_dir=log_dir)
     callbacks = [model_checkpoint, tensorboard, cyclical_learning_rate]
 
