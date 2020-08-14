@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 import numpy as np
 from math import ceil
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     args = argparser.parse_args()
 
     # Get the pre_models
-    cla_num = 20
+    cla_num = 2
     mobilenet = MobilenetV2_Unet(cla_num=cla_num)
     mobilenet.build_model(keras.layers.Input(shape=INPUT_SHAPE), alpha=1.4)
     # multi_gpu_model(mobilenet, gpus=2)

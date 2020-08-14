@@ -70,13 +70,12 @@ class DataGenerator(Sequence):
             # Make binary mask
             # mask = mask.astype(np.uint8)
 
-            # mask = np.where(mask >= 1., 1., 0.)
             if self.cla_num == 2:
-                mask = np.where(mask >= 1., 1., 0.)
+                mask = np.where(mask >= 1, 1, 0)
             mask_label = np.zeros(mask.shape + (self.cla_num,))
             if self.cla_num == 4:  # 1.Hat,2.Hair,13.Face
                 label_num = {1: 1, 2: 2, 13: 3}
-                for i in range(self.cla_num):
+                for i in range(20):
                     if i in label_num.keys():
                         mask_label[mask == i, label_num[i]] = 1
                     else:
