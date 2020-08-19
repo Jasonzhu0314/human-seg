@@ -22,9 +22,9 @@ def cosine_annealing(global_step,
 
 
 class CyclicalScheduler(keras.callbacks.Callback):
-    """
+	"""
     继承Callback，实现对学习率的调度
-    """
+	"""
     def __init__(self, lrate_max,
                  lrate_min,
                  total_epochs,
