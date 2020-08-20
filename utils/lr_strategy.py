@@ -8,11 +8,12 @@ def cosine_annealing(global_step,
                              learning_rate_min,
                              epoch_per_cycle):
     """
-    参数：
+    :param：
     global_step: 记录当前执行的步数。
     learning_rate_min：最小学习率
     learning_rate_max: 最大学习率
     epoch_per_cycle: 每次余弦退火的周期
+    :return: learning rate
     """
     epoch_cur = global_step % epoch_per_cycle
     # 实现余弦退火的原理
@@ -22,16 +23,37 @@ def cosine_annealing(global_step,
 
 
 class CyclicalScheduler(keras.callbacks.Callback):
-	"""
+    """
     继承Callback，实现对学习率的调度
-	"""
+    :param：
+    lrate_min：最小学习率
+    lrate_max: 最大学习率
+    total_epochs: 总的迭代次数
+    epoch_per_cycle: 每次余弦退火的周期
+    n_cycles: 总的循环次数
+    epoch_step_init: 起始迭代数
+    sava_snapshot: 每次循环结束后时候保存模型
+    model_folder: 存放模型地址
+    :return: instance object
+    example:
+    cyclical_learning_rate = CyclicalScheduler(lrate_max=0.01,
+                                               lrate_min=0,
+                                               total_epochs=300,
+                                               n_cycles=3,
+                                               epoch_step_init=0,
+                                               save_snapshot=True,
+                                               model_folder="./checkpoints")
+    callbacks = [cyclical_learning_rate]
+    model.fit(....
+            callbacks=callbacks)
+    """
     def __init__(self, lrate_max,
                  lrate_min,
                  total_epochs,
                  n_cycles,
                  epoch_step_init=0,
                  save_snapshot=True,
-                 cla_num=4):
+                 model_folder="./checkpoints"):
         super(CyclicalScheduler, self).__init__()
         self.cycles = n_cycles
         self.epochs_per_cycle = total_epochs // self.cycles
@@ -40,7 +62,7 @@ class CyclicalScheduler(keras.callbacks.Callback):
         self.lr_min = lrate_min
         self.learning_rates = []  # learning_rates用于记录每次更新后的学习率，方便图形化观察
         self.save_snapshot = save_snapshot
-        self.cla_num = cla_num
+        self.model_folder = model_folder
 
     def on_epoch_begin(self, epoch, logs=None):
         """
@@ -63,7 +85,6 @@ class CyclicalScheduler(keras.callbacks.Callback):
         self.epoch_step += 1
         if self.save_snapshot:
             if self.epoch_step != 0 and (self.epoch_step + 1) % self.epochs_per_cycle == 0:
-                filename = "./checkpoints/{}/snapshot_model_{}.h5".format(self.cla_num,
-                                                                          int((self.epoch_step + 1) / self.epochs_per_cycle))
+                filename = self.model_folder + "/snapshot_model_{}.h5".format(int((self.epoch_step + 1) / self.epochs_per_cycle))
                 self.model.save(filename)
                 print(f'>saved snapshot {filename}, epoch {self.epoch_step}')
